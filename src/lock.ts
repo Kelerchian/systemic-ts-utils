@@ -1,12 +1,13 @@
+import { NewLineKind } from "typescript";
 import { sleep } from "./async-utils.js";
 import { ERPromise } from "./erpromise.js";
 import { Obs } from "./obs.js";
 
-export namespace Locks {
-  export const Locked: unique symbol = Symbol("Locked");
-  export type Locked = typeof Locked;
+export const Locked: unique symbol = Symbol("Locked");
+export type Locked = typeof Locked;
 
-  export const BoolLock = () => {
+export namespace BoolLock {
+  export const make = () => {
     const obs = Obs.make<void>();
     let locked = false;
     return {
@@ -23,35 +24,61 @@ export namespace Locks {
       },
     };
   };
+}
 
-  export type OptimisicLockStatus = {
-    isActive: () => boolean;
-    whenInactive: Promise<void>;
-  };
-  export const OptimisticLock = () => {
+export type OptimisicLockStatus = {
+  isActive: () => boolean;
+  whenInactive: Promise<void>;
+};
+export namespace OptimisticLock {
+  export const make = () => {
     const obs = Obs.make<void>();
     let lock = null as null | ERPromise<void>;
-    const acquireLock = (): OptimisicLockStatus => {
+
+    const nullifyOn = (someLock: ERPromise<void>) => {
+      if (lock === someLock) {
+        lock = null;
+        obs.emit();
+      }
+    };
+
+    const acquireLock = (): {
+      status: OptimisicLockStatus;
+      resolve: () => unknown;
+    } => {
       lock?.control.resolve();
       const newLock = ERPromise.make<void>();
       lock = newLock;
       obs.emit();
       return {
-        isActive: () => lock === newLock,
-        whenInactive: newLock.promise,
+        status: {
+          isActive: () => lock === newLock,
+          whenInactive: newLock.promise,
+        },
+        resolve: () => {
+          newLock.control.resolve();
+          nullifyOn(newLock);
+        },
       };
     };
+
     return {
       change: obs,
-      use: <T>(fn: (lockStatus: OptimisicLockStatus) => Promise<T>) =>
-        fn(acquireLock()),
+      use: async <T>(fn: (lockStatus: OptimisicLockStatus) => Promise<T>) => {
+        const currentLock = acquireLock();
+        const res = fn(currentLock.status);
+        res.finally(currentLock.resolve);
+        return res;
+      },
     };
   };
+}
 
-  export const QueueLock = () => {
+export namespace QueueLock {
+  export const make = () => {
     // eslint-disable-next-line @typescript-eslint/ban-types
     const queue: Function[] = [];
-    const criticalSection = BoolLock();
+    const criticalSection = BoolLock.make();
     const obs = Obs.make<void>();
 
     let finishSignal = ERPromise.make<void>();
@@ -72,9 +99,13 @@ export namespace Locks {
         newFinishSignal.control.resolve();
       });
 
+    // bind critical section to obs
+    criticalSection.change.sub(obs.emit);
+
     return {
       length: () => queue.length + (criticalSection.locked() ? 1 : 0),
       whenEmpty: () => finishSignal.promise,
+      change: obs,
       use: <T>(fn: () => Promise<T>) => {
         const { control, promise } = ERPromise.make<T>();
         const task = () => fn().then(control.resolve).catch(control.reject);

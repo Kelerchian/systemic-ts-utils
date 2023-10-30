@@ -1,13 +1,13 @@
-export type Purgable<T> = {
+export type PurgeMemo<T> = {
   call: () => T;
   purge: () => void;
   id: () => symbol;
 };
 
-export namespace Purgable {
-  const UNINIT = Symbol("UNINIT");
+export namespace PurgeMemo {
+  export const UNINIT = Symbol("UNINIT");
 
-  export const make = <T>(originalCalculation: () => T): Purgable<T> => {
+  export const make = <T>(originalCalculation: () => T): PurgeMemo<T> => {
     let innerId = Symbol();
     let val = UNINIT as T | typeof UNINIT;
 

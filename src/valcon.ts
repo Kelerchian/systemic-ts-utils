@@ -1,29 +1,36 @@
 import { Obs } from "./obs.js";
 
-export type Valcon<T extends unknown> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Valcon<T extends any> = {
   get: () => T;
   set: (t: T) => unknown;
 };
-export const Valcon = <T>(t: T): Valcon<T> => {
-  let val = t;
-  return {
-    get: () => val,
-    set: (newval: T) => {
-      val = newval;
-    },
+export namespace Valcon {
+  export const make = <T>(t: T): Valcon<T> => {
+    let val = t;
+    return {
+      get: () => val,
+      set: (newval: T) => {
+        val = newval;
+      },
+    };
   };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ObsValcon<T extends any> = Valcon<T> & {
+  change: Obs<T>;
 };
 
-export type ObsValcon<T extends unknown> = Valcon<T> & {
-  obs: Obs<T>;
-};
-
-export const ObsValcon = <T extends unknown>(t: T) => {
-  const valcon = Valcon(t);
-  const obs = Obs.make<T>();
-  const set: ObsValcon<T>["set"] = (newval: T) => {
-    valcon.set(newval);
-    obs.emit(newval);
+export namespace ObsValcon {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  export const make = <T extends any>(t: T): ObsValcon<T> => {
+    const valcon = Valcon.make(t);
+    const change = Obs.make<T>();
+    const set: ObsValcon<T>["set"] = (newval: T) => {
+      valcon.set(newval);
+      change.emit(newval);
+    };
+    return { ...valcon, change, set };
   };
-  return { ...valcon, obs, set };
-};
+}

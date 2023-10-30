@@ -20,29 +20,26 @@ export namespace Destruction {
       hooks.push(hook);
     };
 
-    const {
-      promise: whenDestroyed,
-      control: { resolve: destroy },
-    } = ERPromise.make<void>();
-
-    whenDestroyed.finally(() => {
-      destroyed = true;
-      hooks.forEach((hook) => {
-        try {
-          return hook();
-        } catch (error) {
-          console.error(error);
-          return error;
-        }
-      });
-      hooks.length = 0;
-    });
+    const { promise: whenDestroyed, control } = ERPromise.make<void>();
 
     return {
       isDestroyed,
       whenDestroyed,
       onDestroy,
-      destroy,
+      destroy: () => {
+        if (destroyed) return;
+        destroyed = true;
+        hooks.forEach((hook) => {
+          try {
+            return hook();
+          } catch (error) {
+            console.error(error);
+            return error;
+          }
+        });
+        hooks.length = 0;
+        control.resolve();
+      },
     };
   };
 }
