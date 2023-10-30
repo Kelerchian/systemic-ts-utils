@@ -5,7 +5,7 @@ import {
   TEST_CJS_DIR,
   TEST_ESM_DIR,
   TEST_FILE_EXTENSION,
-} from "./cjs-common.js";
+} from "./commonjs-common.js";
 
 const createNotice = ({ sourcePath }: { sourcePath: string }) =>
   `
@@ -22,7 +22,7 @@ globSync(`${TEST_ESM_DIR}/**/*${TEST_FILE_EXTENSION}`, {
   let content = fs.readFileSync(sourcePath, "utf8");
   content = content.replace(
     /from "..\/..\/dist\/esm\/(.*).js"/gi,
-    (_, p1) => `from "../../dist/cjs/${p1}"`,
+    (_, p1) => `from "../../dist/commonjs/${p1}"`,
   );
   content = content.replace(/from ".\/(.*).js"/gi, (_, p1) => `from "./${p1}"`);
   content = `${createNotice({ sourcePath })}${content}`;

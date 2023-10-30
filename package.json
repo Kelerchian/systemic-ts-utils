@@ -1,36 +1,21 @@
 {
   "name": "systemic-ts-utils",
-  "version": "0.2.0",
+  "version": "0.2.1",
+  "sideEffect": false,
   "description": "",
   "type": "module",
-  "types": "./dist/esm/index.d.ts",
-  "module": "./dist/esm/index.js",
-  "main": "./dist/cjs/index.js",
   "files": [
-    "./dist/**/*"
+    "dist"
   ],
-  "exports": {
-    ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./*": {
-      "import": "./dist/esm/*.js",
-      "require": "./dist/cjs/*.js"
-    }
-  },
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs && npm run build:copy-package-json",
-    "build:esm": "tsc --build tsconfig.esm.json",
-    "build:cjs": "tsc --build tsconfig.cjs.json",
-    "build:copy-package-json": "ts-node-esm scripts/build/copy-package-json.ts",
-    "clean": "npm run clean:dist && npm run test:cjs:clean",
+    "build": "tshy",
+    "clean": "npm run clean:dist && npm run test:commonjs:clean",
     "clean:dist": "rimraf ./dist",
-    "test": "npm run test:esm && npm run test:cjs",
+    "test": "npm run test:esm && npm run test:commonjs",
     "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config=tests/esm/jest.config.ts",
-    "test:cjs": "npm run test:cjs:clean && npm run test:cjs:copy && jest --config=tests/cjs/jest.config.ts",
-    "test:cjs:copy": "ts-node-esm scripts/test/cjs-copy.ts",
-    "test:cjs:clean": "ts-node-esm scripts/test/cjs-remove.ts",
+    "test:commonjs": "npm run test:commonjs:clean && npm run test:commonjs:copy && jest --config=tests/commonjs/jest.config.ts",
+    "test:commonjs:copy": "ts-node-esm scripts/test/commonjs-copy.ts",
+    "test:commonjs:clean": "ts-node-esm scripts/test/commonjs-remove.ts",
     "lint": "npx eslint src/**/*.ts",
     "lint:strict": "npm run lint -- --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
@@ -51,6 +36,92 @@
     "prettier": "^3.0.3",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "tshy": "^1.7.0"
+  },
+  "tshy": {
+    "exports": {
+      "./async-utils": "./src/async-utils.ts",
+      "./destruction": "./src/destruction.ts",
+      "./erpromise": "./src/erpromise.ts",
+      "./iter-cell": "./src/iter-cell.ts",
+      "./lock": "./src/lock.ts",
+      "./obs": "./src/obs.ts",
+      "./purge-memo": "./src/purge-memo.ts",
+      "./package.json": "./package.json"
+    }
+  },
+  "exports": {
+    "./async-utils": {
+      "import": {
+        "types": "./dist/esm/async-utils.d.ts",
+        "default": "./dist/esm/async-utils.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/async-utils.d.ts",
+        "default": "./dist/commonjs/async-utils.js"
+      }
+    },
+    "./destruction": {
+      "import": {
+        "types": "./dist/esm/destruction.d.ts",
+        "default": "./dist/esm/destruction.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/destruction.d.ts",
+        "default": "./dist/commonjs/destruction.js"
+      }
+    },
+    "./erpromise": {
+      "import": {
+        "types": "./dist/esm/erpromise.d.ts",
+        "default": "./dist/esm/erpromise.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/erpromise.d.ts",
+        "default": "./dist/commonjs/erpromise.js"
+      }
+    },
+    "./iter-cell": {
+      "import": {
+        "types": "./dist/esm/iter-cell.d.ts",
+        "default": "./dist/esm/iter-cell.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/iter-cell.d.ts",
+        "default": "./dist/commonjs/iter-cell.js"
+      }
+    },
+    "./lock": {
+      "import": {
+        "types": "./dist/esm/lock.d.ts",
+        "default": "./dist/esm/lock.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/lock.d.ts",
+        "default": "./dist/commonjs/lock.js"
+      }
+    },
+    "./obs": {
+      "import": {
+        "types": "./dist/esm/obs.d.ts",
+        "default": "./dist/esm/obs.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/obs.d.ts",
+        "default": "./dist/commonjs/obs.js"
+      }
+    },
+    "./purge-memo": {
+      "import": {
+        "types": "./dist/esm/purge-memo.d.ts",
+        "default": "./dist/esm/purge-memo.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/purge-memo.d.ts",
+        "default": "./dist/commonjs/purge-memo.js"
+      }
+    },
+    "./package.json": "./package.json"
   }
 }

@@ -1,9 +1,9 @@
 import * as fs from "fs";
 
 export namespace Paths {
-  export const packageJsonCjsPatch = "./package.cjs.patch.json";
+  export const packageJsonCjsPatch = "./package.commonjs.patch.json";
   export const packageJsonEsmPatch = "./package.esm.patch.json";
-  export const packageJsonCjs = "./dist/cjs/package.json";
+  export const packageJsonCjs = "./dist/commonjs/package.json";
   export const packageJsonEsm = "./dist/esm/package.json";
 }
 

@@ -1,4 +1,3 @@
-import { NewLineKind } from "typescript";
 import { sleep } from "./async-utils.js";
 import { ERPromise } from "./erpromise.js";
 import { Obs } from "./obs.js";
