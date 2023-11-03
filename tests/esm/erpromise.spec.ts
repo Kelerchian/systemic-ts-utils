@@ -98,4 +98,78 @@ describe("ERAbortable", () => {
     expect(flags.abortFromReturn).toEqual(false);
     expect(flags.abortFromWhen).toEqual(false);
   });
+
+  describe("ERAbortable.all", () => {
+    const barriered = () => {
+      const barrier = ERPromise.make<void>();
+      const abortable = ERAbortable.make((status) =>
+        barrier.promise.then(() => status.isAborted()),
+      );
+      return { barrier, abortable };
+    };
+
+    it("should waits for all to resolve", async () => {
+      const a = barriered();
+      const b = barriered();
+      let resolved = false;
+      const all = ERAbortable.all([a.abortable, b.abortable]);
+      all.promise.finally(() => (resolved = true));
+
+      expect(resolved).toBe(false);
+      a.barrier.control.resolve();
+      expect(resolved).toBe(false);
+      b.barrier.control.resolve();
+      expect(await all.promise).toEqual([false, false]);
+      expect(resolved).toBe(true);
+    });
+
+    it("should be able to abort all promises", async () => {
+      const a = barriered();
+      const b = barriered();
+      let resolved = false;
+      const all = ERAbortable.all([a.abortable, b.abortable]);
+      all.promise.finally(() => (resolved = true));
+      all.abort();
+      a.barrier.control.resolve();
+      b.barrier.control.resolve();
+      expect(await all.promise).toEqual([true, true]);
+    });
+  });
+});
+
+describe("ERAbortable.race", () => {
+  const Cancelled = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const barriered = <T extends any>(val: T) => {
+    const barrier = ERPromise.make<void>();
+    const abortable = ERAbortable.make((status) =>
+      barrier.promise.then(() => (!status.isAborted() ? val : Cancelled)),
+    );
+    return { barrier, abortable };
+  };
+
+  it("should waits for all to resolve", async () => {
+    const a = barriered("a");
+    const b = barriered("b");
+
+    const race = ERAbortable.race([a.abortable, b.abortable]);
+
+    b.barrier.control.resolve();
+    expect(await race.promise).toBe(await b.abortable.promise);
+    a.barrier.control.resolve();
+    expect(await a.abortable.promise).toBe(Cancelled);
+  });
+
+  it("should waits for all to resolve", async () => {
+    const a = barriered("a");
+    const b = barriered("b");
+
+    const race = ERAbortable.race([a.abortable, b.abortable]);
+    race.abort();
+
+    b.barrier.control.resolve();
+    expect(await race.promise).toBe(Cancelled);
+    a.barrier.control.resolve();
+    expect(await a.abortable.promise).toBe(Cancelled);
+  });
 });

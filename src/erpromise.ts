@@ -1,14 +1,26 @@
+/**
+ * Externally Resolvable/Rejectable Promise
+ * @example
+ * const erpromise = ERPromise.make<void>();
+ * sendSomewhere(erpromise.promise);
+ * setTimeout(() => {
+ *   erpromise.control.resolve()
+ * }, 1000);
+ */
 export type ERPromise<T> = {
+  /**
+   * The resulting promise
+   */
   promise: Promise<T>;
+  /**
+   * Control over the resulting promise's resolution or rejection
+   */
   control: {
     resolve: (_: T) => unknown;
     reject: (_: unknown) => unknown;
   };
 };
 
-/**
- * Externally Resolvable/Rejectable Promise
- */
 export namespace ERPromise {
   export const make = <T>(): ERPromise<T> => {
     let control = null as unknown as ERPromise<T>["control"];
@@ -19,47 +31,93 @@ export namespace ERPromise {
   };
 }
 
+/**
+ * Externally Resolvable/Rejectable Abortable - A promise that can abort
+ * @example
+ * const abortable = ERAbortable.make(async (status) => {
+ *   const connection = openConnection();
+ *   status.whenAborted().then(() => connection.close());
+ *
+ *   let result = []
+ *   while (!status.isAborted() && !isDone(result)) {
+ *      result.push(await connection.getResult());
+ *   }
+ *
+ *   if (status.isAborted()) return null;
+ *
+ *   return result;
+ * })
+ */
 export type ERAbortable<T> = {
+  /**
+   * The resulting promise
+   */
   promise: Promise<T>;
+  /**
+   * Sends abort signal to the running promise
+   */
   abort: () => unknown;
 };
 
 export namespace ERAbortable {
   export type AbortStatus = {
+    /**
+     * Promise that resolves when the abortable is aborted
+     */
     whenAborted: Promise<void>;
+    /**
+     * @returns true if aborted
+     */
     isAborted: () => boolean;
   };
 
+  /**
+   * Externally Resolvable/Rejectable Abortable - A promise that can abort
+   * @example
+   * const abortable = ERAbortable.make(async (status) => {
+   *   const connection = openConnection();
+   *   status.whenAborted().then(() => connection.close());
+   *
+   *   let result = []
+   *   while (!status.isAborted() && !isDone(result)) {
+   *      result.push(await connection.getResult());
+   *   }
+   *
+   *   if (status.isAborted()) return null;
+   *
+   *   return result;
+   * })
+   *
+   * await abortable.promise; // waits for the promise to resolve
+   * abortable.abort() // abort from the outside
+   */
   export const make = <T>(
     fn: (onabort: AbortStatus) => Promise<T>,
   ): ERAbortable<T> => {
-    let aborted = false;
-    let done = false;
-    const {
-      control: { resolve: abortInner },
-      promise: whenAborted,
-    } = ERPromise.make<void>();
-    const abort = () => {
-      if (done) return;
-      abortInner();
+    const data = {
+      aborted: false,
+      done: false,
+      abortER: ERPromise.make<void>(),
     };
-    whenAborted.then(() => (aborted = true));
-    const isAborted = () => aborted;
 
-    const promise = (async () => {
-      return await fn({ isAborted, whenAborted }).finally(() => (done = true));
-    })();
+    const isAborted = () => data.aborted;
+
+    const abort = () => {
+      console.log("abort", 1);
+      if (data.done) return;
+      console.log("abort", 2);
+      data.aborted = true;
+      console.log("abort", 3);
+      data.abortER.control.resolve();
+    };
+
+    const promise = fn({
+      isAborted,
+      whenAborted: data.abortER.promise,
+    }).finally(() => (data.done = true));
+
     return { abort, promise };
   };
-
-  type ERsIntoTupleT<ERs extends readonly ERAbortable<unknown>[]> = {
-    -readonly [P in keyof ERs]: Awaited<ERs[P]["promise"]>;
-  };
-
-  type ERsIntoUnionT<ERs extends readonly ERAbortable<unknown>[]> = Promise<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Awaited<[ERs[any]["promise"]]>
-  >;
 
   export const all = <ERs extends readonly ERAbortable<unknown>[]>(
     ers: ERs,
@@ -76,28 +134,32 @@ export namespace ERAbortable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let first: null | ERs[any] = null;
 
-    const promise = (async () => {
-      const race = Promise.race(ers.map((er) => er.promise));
-
-      // first settled ER wins
-      ers.forEach((er) =>
+    const promise = Promise.race(
+      ers.map((er) =>
         er.promise.finally(() => {
+          // first settled ER wins
           if (first) return;
           first = er;
+          // when race is settled, abort the rest of the winner
+          ers
+            .filter((peerEr) => peerEr !== er)
+            .forEach((peerEr) => peerEr.abort());
         }),
-      );
-
-      // when race is settled, abort the rest of the winner
-      race.finally(() =>
-        ers.filter((er) => er !== first).forEach((er) => er.abort()),
-      );
-
-      return race;
-    })() as Promise<ERsIntoUnionT<ERs>>;
+      ),
+    ) as Promise<ERsIntoUnionT<ERs>>;
 
     return {
       promise,
       abort: () => ers.map((er) => er.abort()),
     };
   };
+
+  type ERsIntoTupleT<ERs extends readonly ERAbortable<unknown>[]> = {
+    -readonly [P in keyof ERs]: Awaited<ERs[P]["promise"]>;
+  };
+
+  type ERsIntoUnionT<ERs extends readonly ERAbortable<unknown>[]> = Promise<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Awaited<[ERs[any]["promise"]]>
+  >;
 }

@@ -44,3 +44,26 @@ it("should not emit to unsubscribed listener (by unsub method)", () => {
   obs.emit(2);
   expect(val).toBe(0);
 });
+
+it("should pipe obs emission until unsubbed", () => {
+  let captured1 = 0;
+  let captured2 = 0;
+  let captured3 = 0;
+  const obs1 = Obs.make<number>();
+  const obs2 = Obs.make<number>();
+  const obs3 = Obs.make<number>();
+  obs1.sub((x) => (captured1 = x));
+  obs2.sub((x) => (captured2 = x));
+  obs3.sub((x) => (captured3 = x));
+  const pipe = Obs.Pipe.make(obs1, [obs2, obs3]);
+
+  obs1.emit(1);
+  expect(captured1).toBe(1);
+  expect(captured2).toBe(1);
+  expect(captured3).toBe(1);
+  pipe.unsub();
+  obs1.emit(2);
+  expect(captured1).toBe(2);
+  expect(captured2).toBe(1);
+  expect(captured3).toBe(1);
+});

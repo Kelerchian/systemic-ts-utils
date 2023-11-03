@@ -41,6 +41,7 @@
   },
   "tshy": {
     "exports": {
+      ".": "./src/index.ts",
       "./async-utils": "./src/async-utils.ts",
       "./destruction": "./src/destruction.ts",
       "./erpromise": "./src/erpromise.ts",
@@ -52,6 +53,16 @@
     }
   },
   "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/index.d.ts",
+        "default": "./dist/commonjs/index.js"
+      }
+    },
     "./async-utils": {
       "import": {
         "types": "./dist/esm/async-utils.d.ts",
@@ -123,5 +134,7 @@
       }
     },
     "./package.json": "./package.json"
-  }
+  },
+  "main": "./dist/commonjs/index.js",
+  "types": "./dist/commonjs/index.d.ts"
 }

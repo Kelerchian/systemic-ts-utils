@@ -2,11 +2,42 @@ import { Obs } from "./obs.js";
 import { PurgeMemo } from "./purge-memo.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AllowedIterators = Array<any> | Set<any> | Map<any, any>;
+export type IterCellAllowedInners = Array<any> | Set<any> | Map<any, any>;
 
-export type IterCell<T extends AllowedIterators> = {
-  access: () => T;
+/**
+ * Iterator Cell, a data structure that wraps immutable Set, Map, or Array at
+ * compile-time.
+ * @example
+ * const setCell = IterCell.make(new Set<string>());
+ * const mapCell = IterCell.make(new Map<number | string, unknown>());
+ * const arrayCell = IterCell.make([1, "somestring", {}]);
+ * @example
+ * const immutableSet = IterCell.make(new Set<string>())
+ * const state1 = immutableSet.access()
+ * const state2 = immutableSet.access()
+ * immutableSet.mutate((set) => {
+ *   // modify set
+ * })
+ * const stateAfterMutation = immutableSet.access()
+ * immutableSet.replace((set) => new Set())
+ * const stateAfterReplacement = immutableSet.access()
+ * // state1 === state2
+ * // state1 !== stateAfterMutation
+ * // state1 !== stateAfterReplacement
+ * // stateAfterMutation !== stateAfterReplacement
+ */
+export type IterCell<T extends IterCellAllowedInners> = {
+  /**
+   * Retrieve a readonly version of its inner iterable
+   */
+  access: () => ReadonlyOf<T>;
+  /**
+   * Copy the inner iterable and receive a mutating function
+   */
   mutate: (fn: (_: T) => unknown) => void;
+  /**
+   * Replace the inner iterable with the result of the passed function
+   */
   replace: (fn: (_: T) => T) => void;
 };
 
@@ -18,9 +49,35 @@ export class IterCellError extends Error {
 }
 
 export namespace IterCell {
-  export const make = <T extends AllowedIterators>(input: T): IterCell<T> => {
+  /**
+   * Create an `IterCell`
+   *
+   * Iterator Cell, a data structure that wraps immutable Set, Map, or Array at
+   * compile-time.
+   * @example
+   * const setCell = IterCell.make(new Set<string>());
+   * const mapCell = IterCell.make(new Map<number | string, unknown>());
+   * const arrayCell = IterCell.make([1, "somestring", {}]);
+   * @example
+   * const immutableSet = IterCell.make(new Set<string>())
+   * const state1 = immutableSet.access()
+   * const state2 = immutableSet.access()
+   * immutableSet.mutate((set) => {
+   *   // modify set
+   * })
+   * const stateAfterMutation = immutableSet.access()
+   * immutableSet.replace((set) => new Set())
+   * const stateAfterReplacement = immutableSet.access()
+   * // state1 === state2
+   * // state1 !== stateAfterMutation
+   * // state1 !== stateAfterReplacement
+   * // stateAfterMutation !== stateAfterReplacement
+   */
+  export const make = <T extends IterCellAllowedInners>(
+    input: T,
+  ): IterCell<T> => {
     let inner = copy(input);
-    const access = () => inner;
+    const access = () => inner as unknown as ReadonlyOf<T>;
     const mutate: IterCell<T>["mutate"] = (fn) => {
       const next = copy(inner);
       fn(next);
@@ -36,9 +93,9 @@ export namespace IterCell {
 
   export type Lazy<R> = PurgeMemo<R>;
   export namespace Lazy {
-    export const make = <T extends AllowedIterators, R>(
+    export const make = <T extends IterCellAllowedInners, R>(
       immutIter: IterCell<T>,
-      calc: (t: T) => R,
+      calc: (t: ReadonlyOf<T>) => R,
     ) => {
       const lazy = PurgeMemo.make(() => calc(immutIter.access()));
       let lastContainer = immutIter.access();
@@ -55,11 +112,11 @@ export namespace IterCell {
   }
 }
 
-export type ObsIterCell<T extends AllowedIterators> = IterCell<T> & {
+export type ObsIterCell<T extends IterCellAllowedInners> = IterCell<T> & {
   obs: Obs<void>;
 };
 export namespace ObsIterCell {
-  export const make = <T extends AllowedIterators>(
+  export const make = <T extends IterCellAllowedInners>(
     input: T,
   ): ObsIterCell<T> => {
     const iterCell = IterCell.make(input);
@@ -83,14 +140,21 @@ export namespace ObsIterCell {
 // Utils
 // =====
 
-const copy = <T extends AllowedIterators>(input: T): T => {
-  switch (true) {
-    case input instanceof Set:
-      return new Set(input) as T;
-    case input instanceof Map:
-      return new Map(input) as T;
-    case Array.isArray(input):
-      return [...input] as T;
+const copy = <T extends IterCellAllowedInners>(input: T): T => {
+  if (input instanceof Set) {
+    return new Set(input) as T;
+  } else if (input instanceof Map) {
+    return new Map(input) as T;
+  } else if (Array.isArray(input)) {
+    return [...input] as T;
   }
   throw new IterCellError("input is not instanceof Array, Set, or Map");
 };
+
+type ReadonlyOf<T extends IterCellAllowedInners> = T extends Set<infer P>
+  ? ReadonlySet<P>
+  : T extends Map<infer K, infer V>
+  ? ReadonlyMap<K, V>
+  : T extends Array<infer P>
+  ? ReadonlyArray<P>
+  : never;
