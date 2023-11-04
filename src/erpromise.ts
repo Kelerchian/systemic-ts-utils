@@ -103,11 +103,8 @@ export namespace ERAbortable {
     const isAborted = () => data.aborted;
 
     const abort = () => {
-      console.log("abort", 1);
       if (data.done) return;
-      console.log("abort", 2);
       data.aborted = true;
-      console.log("abort", 3);
       data.abortER.control.resolve();
     };
 

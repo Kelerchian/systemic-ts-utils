@@ -2,14 +2,16 @@ import { it, expect, describe } from "@jest/globals";
 import {
   IterCell,
   ObsIterCell,
-  AllowedIterators,
+  IterCellAllowedInners,
 } from "../../dist/esm/iter-cell.js";
 
-const ValueRegister = <T extends AllowedIterators>(
+const ValueRegister = <T extends IterCellAllowedInners>(
   c: IterCell<T>,
   original: T,
 ) => {
-  const innerStack: T[] = [original];
+  const innerStack: IterCell.ReadonlyOf<T>[] = [
+    original as unknown as IterCell.ReadonlyOf<T>,
+  ];
 
   const push = () => innerStack.unshift(c.access());
   const pushAndExpectDifferentAndEqualTo = (t: unknown) => {

@@ -30,7 +30,7 @@ export type IterCell<T extends IterCellAllowedInners> = {
   /**
    * Retrieve a readonly version of its inner iterable
    */
-  access: () => ReadonlyOf<T>;
+  access: () => IterCell.ReadonlyOf<T>;
   /**
    * Copy the inner iterable and receive a mutating function
    */
@@ -91,6 +91,16 @@ export namespace IterCell {
     return { access, mutate, replace };
   };
 
+  export type ReadonlyOf<T extends IterCellAllowedInners> = T extends Set<
+    infer P
+  >
+    ? ReadonlySet<P>
+    : T extends Map<infer K, infer V>
+    ? ReadonlyMap<K, V>
+    : T extends Array<infer P>
+    ? ReadonlyArray<P>
+    : never;
+
   export type Lazy<R> = PurgeMemo<R>;
   export namespace Lazy {
     export const make = <T extends IterCellAllowedInners, R>(
@@ -150,11 +160,3 @@ const copy = <T extends IterCellAllowedInners>(input: T): T => {
   }
   throw new IterCellError("input is not instanceof Array, Set, or Map");
 };
-
-type ReadonlyOf<T extends IterCellAllowedInners> = T extends Set<infer P>
-  ? ReadonlySet<P>
-  : T extends Map<infer K, infer V>
-  ? ReadonlyMap<K, V>
-  : T extends Array<infer P>
-  ? ReadonlyArray<P>
-  : never;
