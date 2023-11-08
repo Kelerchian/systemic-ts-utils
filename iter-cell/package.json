@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/iter-cell.js",
+  "module": "../dist/esm/iter-cell.js",
+  "typings": "../dist/commonjs/iter-cell.d.ts"
+}

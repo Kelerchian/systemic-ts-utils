@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/destruction.js",
+  "module": "../dist/esm/destruction.js",
+  "typings": "../dist/commonjs/destruction.d.ts"
+}

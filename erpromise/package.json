@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/erpromise.js",
+  "module": "../dist/esm/erpromise.js",
+  "typings": "../dist/commonjs/erpromise.d.ts"
+}

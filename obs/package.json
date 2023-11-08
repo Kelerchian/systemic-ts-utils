@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/obs.js",
+  "module": "../dist/esm/obs.js",
+  "typings": "../dist/commonjs/obs.d.ts"
+}

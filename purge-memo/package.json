@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/purge-memo.js",
+  "module": "../dist/esm/purge-memo.js",
+  "typings": "../dist/commonjs/purge-memo.d.ts"
+}

@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/async-utils.js",
+  "module": "../dist/esm/async-utils.js",
+  "typings": "../dist/commonjs/async-utils.d.ts"
+}

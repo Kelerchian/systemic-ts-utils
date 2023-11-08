@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/lock.js",
+  "module": "../dist/esm/lock.js",
+  "typings": "../dist/commonjs/lock.d.ts"
+}

@@ -1,11 +1,18 @@
 {
   "name": "systemic-ts-utils",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "sideEffect": false,
   "description": "",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "async-utils",
+    "destruction",
+    "erpromise",
+    "iter-cell",
+    "lock",
+    "obs",
+    "purge-memo"
   ],
   "scripts": {
     "build": "tshy",
@@ -16,6 +23,7 @@
     "test:commonjs": "npm run test:commonjs:clean && npm run test:commonjs:copy && jest --config=tests/commonjs/jest.config.ts",
     "test:commonjs:copy": "ts-node-esm scripts/test/commonjs-copy.ts",
     "test:commonjs:clean": "ts-node-esm scripts/test/commonjs-remove.ts",
+    "generate-node10-support": "ts-node-esm scripts/generate-node10-support.ts",
     "lint": "npx eslint src/**/*.ts",
     "lint:strict": "npm run lint -- --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
