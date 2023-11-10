@@ -1,6 +1,6 @@
 {
   "name": "systemic-ts-utils",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "sideEffect": false,
   "description": "",
   "type": "module",
@@ -12,10 +12,11 @@
     "iter-cell",
     "lock",
     "obs",
-    "purge-memo"
+    "purge-memo",
+    "valcon"
   ],
   "scripts": {
-    "build": "tshy",
+    "build": "tshy && npm run generate-node10-support",
     "clean": "npm run clean:dist && npm run test:commonjs:clean",
     "clean:dist": "rimraf ./dist",
     "test": "npm run test:esm && npm run test:commonjs",
@@ -55,6 +56,7 @@
       "./lock": "./src/lock.ts",
       "./obs": "./src/obs.ts",
       "./purge-memo": "./src/purge-memo.ts",
+      "./valcon": "./src/valcon.ts",
       "./package.json": "./package.json"
     }
   },
@@ -137,6 +139,16 @@
       "require": {
         "types": "./dist/commonjs/purge-memo.d.ts",
         "default": "./dist/commonjs/purge-memo.js"
+      }
+    },
+    "./valcon": {
+      "import": {
+        "types": "./dist/esm/valcon.d.ts",
+        "default": "./dist/esm/valcon.js"
+      },
+      "require": {
+        "types": "./dist/commonjs/valcon.d.ts",
+        "default": "./dist/commonjs/valcon.js"
       }
     },
     "./package.json": "./package.json"

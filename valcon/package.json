@@ -1,0 +1,5 @@
+{
+  "main": "../dist/commonjs/valcon.js",
+  "module": "../dist/esm/valcon.js",
+  "typings": "../dist/commonjs/valcon.d.ts"
+}
