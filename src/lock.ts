@@ -67,6 +67,7 @@ export type OptimisticLock = {
    * Event emitter that changes when the lock is changed
    */
   change: Obs<void>;
+  locked: () => boolean;
   use: <T>(_: (lockStatus: OptimisicLockStatus) => Promise<T>) => Promise<T>;
 };
 
@@ -129,7 +130,7 @@ export namespace OptimisticLock {
       return res;
     };
 
-    return { change: obs, use };
+    return { change: obs, use, locked: () => lock !== null };
   };
 }
 

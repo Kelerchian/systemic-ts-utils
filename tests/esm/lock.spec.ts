@@ -66,12 +66,15 @@ describe("OptimisticLock", () => {
     const secondBarrier = ERPromise.make<void>();
 
     expect(emitCount).toBe(0);
+    expect(lock.locked()).toBe(false);
+
     // First locked async fn
     const first = lock.use(async (x) => {
       firstLock = x;
       await firstBarrier.promise;
       return 1;
     });
+    expect(lock.locked()).toBe(true);
 
     expect(emitCount).toBe(1);
     expect(firstLock).not.toBe(null);
@@ -83,6 +86,8 @@ describe("OptimisticLock", () => {
       return 1;
     });
 
+    expect(lock.locked()).toBe(true);
+
     expect(emitCount).toBe(2);
     expect(first).toBeInstanceOf(Promise);
     expect(second).toBeInstanceOf(Promise);
@@ -92,6 +97,7 @@ describe("OptimisticLock", () => {
 
     // The second the second lock is triggered, it will be resolved
     await firstLock?.whenInactive;
+    expect(lock.locked()).toBe(true);
 
     firstBarrier.control.resolve();
     expect(await first).toBe(1);
@@ -102,6 +108,7 @@ describe("OptimisticLock", () => {
     expect(await second).toBe(1);
 
     await secondLock?.whenInactive;
+    expect(lock.locked()).toBe(false);
     expect(emitCount).toBe(3);
   });
 });

@@ -6,11 +6,13 @@ import * as path from "node:path";
   const packageJsonPath = path.resolve(rootPath, "package.json");
   const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"));
   const exports = packageJson?.tshy?.exports;
-  if (!exports) throw new Error("tshy.exports undefinefd");
+  if (!exports) throw new Error("tshy.exports undefined");
 
   const subpaths = Object.entries(exports);
   const pathConfigs = subpaths
-    .filter(([key, _]) => key !== "." && key !== "./package.json")
+    .filter(([key, _]) => {
+      return key !== "." && key !== "./package.json";
+    })
     .map(([key, value]) => {
       const sourcePathParsed = path.parse(value as string);
       return {

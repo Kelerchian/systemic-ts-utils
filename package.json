@@ -1,6 +1,6 @@
 {
   "name": "systemic-ts-utils",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "sideEffect": false,
   "description": "",
   "type": "module",
@@ -22,9 +22,9 @@
     "test": "npm run test:esm && npm run test:commonjs",
     "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config=tests/esm/jest.config.ts",
     "test:commonjs": "npm run test:commonjs:clean && npm run test:commonjs:copy && jest --config=tests/commonjs/jest.config.ts",
-    "test:commonjs:copy": "ts-node-esm scripts/test/commonjs-copy.ts",
-    "test:commonjs:clean": "ts-node-esm scripts/test/commonjs-remove.ts",
-    "generate-node10-support": "ts-node-esm scripts/generate-node10-support.ts",
+    "test:commonjs:copy": "npx tsx scripts/test/commonjs-copy.ts",
+    "test:commonjs:clean": "npx tsx scripts/test/commonjs-remove.ts",
+    "generate-node10-support": "npx tsx scripts/generate-node10-support.ts",
     "lint": "npx eslint src/**/*.ts",
     "lint:strict": "npm run lint -- --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
@@ -42,8 +42,8 @@
     "prettier": "^3.0.3",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
     "tshy": "^1.7.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.2.2"
   },
   "tshy": {
